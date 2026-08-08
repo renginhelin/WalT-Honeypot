@@ -22,7 +22,7 @@ $SessionName = "walt"
 
 # --- START LOG STREAM ---
 # Ask for the last specific time of history (e.g. -7d: for 7 days, -7h: for 7 hours, -7m: for 7 minutes).
-$WaltCommand = 'yes "y" | walt log show --issuers $NodeName --history -7d: --streams "cowrie-attacks"'
+$WaltCommand = $WaltCommand = "yes `"y`" | walt log show --issuers $NodeName --history -7d: --streams `"cowrie-attacks`""
 
 Write-Host "Opening stream from WalT server... (Press Ctrl+C to stop)" -ForegroundColor Yellow
 
