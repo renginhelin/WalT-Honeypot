@@ -13,8 +13,6 @@
 # Load the variables from the config file
 source /etc/vars.conf
 
-GATEWAY=<GATEWAY> # Gateway for the public IP addresses (xxx.xx.xxx.xx)
-
 # Check if eth1 actually exists before trying to read its MAC
 if [ -f "/sys/class/net/$INTERFACE/address" ]; then
     NODE_MAC=$(cat /sys/class/net/$INTERFACE/address)

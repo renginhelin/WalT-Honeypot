@@ -7,8 +7,8 @@ set -euo pipefail
 
 echo "Configuring VPS Routing..."
 
-# This variable should be edited based on the VPS's interface name.
-INTERFACE=<INTERFACE>  # The public-facing network interface on the VPS (e.g., eth0, ens4, enp0s3, etc.)
+# Load the variables from the config file
+source /etc/vars.conf
 
 apt-get update
 apt-get install -y iptables
@@ -38,15 +38,15 @@ iptables -I FORWARD 1 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 #   -C || -A: Checks (-C) if the rule exists. If it fails, it Appends (-A) it. 
 #             This prevents rule duplication without causing downtime.
 # -------------------------------------------------------------------------
-iptables -t nat -C PREROUTING -i $INTERFACE -p tcp --dport 22 -j DNAT --to-destination 10.10.10.1:2222 2>/dev/null || \
-iptables -t nat -A PREROUTING -i $INTERFACE -p tcp --dport 22 -j DNAT --to-destination 10.10.10.1:2222
+iptables -t nat -C PREROUTING -i $VPS_INTERFACE -p tcp --dport 22 -j DNAT --to-destination 10.10.10.1:2222 2>/dev/null || \
+iptables -t nat -A PREROUTING -i $VPS_INTERFACE -p tcp --dport 22 -j DNAT --to-destination 10.10.10.1:2222
 
 # -------------------------------------------------------------------------
 # The PREROUTING rule above changed the destination, but the firewall still 
-# needs explicit permission to pass NEW packets from the public web ($INTERFACE) 
+# needs explicit permission to pass NEW packets from the public web ($VPS_INTERFACE) 
 # into the encrypted tunnel (wg0).
 # -------------------------------------------------------------------------
-iptables -C FORWARD -i $INTERFACE -o wg0 -p tcp --dport 2222 -d 10.10.10.1 -j ACCEPT 2>/dev/null || \
-iptables -A FORWARD -i $INTERFACE -o wg0 -p tcp --dport 2222 -d 10.10.10.1 -j ACCEPT
+iptables -C FORWARD -i $VPS_INTERFACE -o wg0 -p tcp --dport 2222 -d 10.10.10.1 -j ACCEPT 2>/dev/null || \
+iptables -A FORWARD -i $VPS_INTERFACE -o wg0 -p tcp --dport 2222 -d 10.10.10.1 -j ACCEPT
 
 echo "VPS Routing Configured successfully."

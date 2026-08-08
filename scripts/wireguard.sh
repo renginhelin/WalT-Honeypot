@@ -16,12 +16,6 @@
 # Load the variables from the config file
 source /etc/vars.conf
 
-# Define WireGuard configuration variables
-WG_PORT=<WG_PORT> # WireGuard port (e.g., 51820)
-GOOFY_VPS_PUBLICKEY=<GOOFY_VPS_PUBLICKEY> # VPS public key for the first node
-PLUTO_VPS_PUBLICKEY=<PLUTO_VPS_PUBLICKEY> # VPS public key for the second node
-MICKEY_VPS_PUBLICKEY=<MICKEY_VPS_PUBLICKEY> # VPS public key for the third node
-
 # Check if eth1 actually exists before trying to read its MAC
 if [ -f "/sys/class/net/$INTERFACE/address" ]; then
     NODE_MAC=$(cat /sys/class/net/$INTERFACE/address)
@@ -50,7 +44,7 @@ wg genkey | tee /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
 NODE_PRIVATE_KEY=$(cat /etc/wireguard/privatekey)
 NODE_PUBLIC_KEY=$(cat /etc/wireguard/publickey)
 
-cat <<EOF > /etc/wireguard/wg0.conf
+cat <<WGCONF > /etc/wireguard/wg0.conf
 [Interface]
 Address = 10.10.10.1/24
 ListenPort = $WG_PORT
@@ -60,11 +54,11 @@ Table = off
 [Peer]
 PublicKey = $VPS_PUBLICKEY
 AllowedIPs = 0.0.0.0/0
-EOF
+WGCONF
 
 mkdir -p /root/vps-configs
 
-cat <<EOF > /root/vps-configs/vps-wg0.conf
+cat <<VPSCONF > /root/vps-configs/vps-wg0.conf
 [Interface]
 Address = 10.10.10.2/24
 PrivateKey = <VPS_PRIVATE_KEY>
@@ -75,4 +69,4 @@ PublicKey = $NODE_PUBLIC_KEY
 Endpoint = $NODE_PUBLIC_IP:$WG_PORT
 AllowedIPs = 10.10.10.0/24, 10.10.10.1/32
 PersistentKeepalive = 25
-EOF
+VPSCONF
