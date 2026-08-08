@@ -1,0 +1,22 @@
+################################################################################
+# Systemd service unit for streaming Cowrie honeypot logs to WalT monitoring.
+# Automatically starts the log-script.sh on boot, depends on cowrie service.
+# This service file is created as part of the image script (image.sh).
+################################################################################
+
+[Unit]
+Description=Cowrie Log Streamer to WalT
+After=network.target cowrie.service
+Requires=cowrie.service
+
+[Service]
+Type=simple
+
+ExecStart=/usr/local/bin/log-script.sh
+
+Restart=always
+
+User=root
+
+[Install]
+WantedBy=multi-user.target

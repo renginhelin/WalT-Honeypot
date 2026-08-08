@@ -1,0 +1,19 @@
+################################################################################
+# Systemd service unit for generating and configuring WireGuard tunnel setup.
+# Runs after network IP assignment to run wireguard.sh script to generate
+# necessary config files to establish a tunnel between VPS/Node.
+# It does not set the Wireguard interface up.
+# This service file is created a part of the image script (image.sh).
+################################################################################
+
+[Unit]
+Description=Generate WireGuard Configs
+After=network-config.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wireguard.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

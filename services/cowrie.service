@@ -1,0 +1,22 @@
+################################################################################
+# Systemd service unit for automatically starting Cowrie.
+# This service file is created as part of the image script (image.sh).
+################################################################################
+
+[Unit]
+Description=Cowrie SSH/Telnet Honeypot
+Documentation=https://github.com/cowrie/cowrie
+After=network.target
+
+[Service]
+Type=forking
+User=cowrie
+Group=cowrie
+WorkingDirectory=/home/cowrie/cowrie
+Environment="PATH=/home/cowrie/cowrie/cowrie-env/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/home/cowrie/cowrie/cowrie-env/bin/cowrie start
+ExecStop=/home/cowrie/cowrie/cowrie-env/bin/cowrie stop
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
