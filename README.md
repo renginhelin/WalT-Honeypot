@@ -8,6 +8,16 @@ This project is a distributed SSH honeypot architecture that uses WalT for handl
 
 - This project also uses WireGuard for VPN tunneling, which will be mentioned in the upcoming sections. Check [WireGuard website](https://www.wireguard.com) for more information.
 
+## Table of Contents
+
+- [Architecture](#architecture)
+- [Using the Scripts](#using-the-scripts)
+  - [Updating Variables](#updating-variables)
+  - [Creating the WalT Image](#creating-the-walt-image)
+  - [Establishing a WireGuard Connection](#establishing-a-wireguard-connection)
+  - [Establishing Firewall Rules](#establishing-firewall-rules)
+- [Monitoring and The Dashboard](#monitoring-and-the-dashboard)
+
 ## Architecture
 
 The system employs three distinct Virtual Private Servers (VPS) located in three different regions to act as the public entrypoint for the honeypot network. These VPS instances are linked to three private nodes via WireGuard tunnels. These nodes are WalT nodes, managed by a single WalT server. WalT server manages the images and the boot processes for all physical nodes. Rebooting nodes end up wiping the node. Any change outside of the `/persist` folder does not survive reboot processes. If something needs to survive a reboot, it either needs to be part of the image that is used for the boot or it should be inside the `/persist` folder of the nodes.
@@ -37,7 +47,7 @@ At the start of the script, a shared variables file is created. Here you need to
 - **PLUTO_VPS_PUBLICKEY:** This is the public key you generate on your **second** VPS instance for WireGuard tunneling. 
 - **MICKEY_VPS_PUBLICKEY:** This is the public key you generate on your **third** VPS instance for WireGuard tunneling.
 
-If you will use more than three devices `network.sh` and `wireguard.sh` that are created inside `image.sh` need to be changed. Since we are booting three different nodes with the same image, after the boot `network.sh` will first get the device's MAC address and try to match it to ones that we specified on the list and assign an IP address based on it. In this way we can use a single image to assign three different IP addresses to three different nodes.
+If you will use more than three devices, `network.sh` and `wireguard.sh` that are created inside `image.sh` need to be changed. Since we are booting three different nodes with the same image, `network.sh` will first get the device's MAC address and try to match it to ones that we specified on the list and assign an IP address based on it, after the device is booted with the image. In this way we can use a single image to assign three different IP addresses to three different nodes.
 ```python
 # Assign Public IP based on the MAC address of the node
 if [ "$NODE_MAC" == "$NODE1_MAC" ]; then
@@ -115,7 +125,7 @@ The image creates a folder named **vps-configs**. In this folder, there is a `wg
 ```bash
 wg genkey | tee /etc/wireguard/privatekey | wg pubkey > /etc/wireguard/publickey
 ```
-2. We will paste the private key of the VPS to the configuration below. This file is the file created under the **vps-configs** folder and private key is the only thing we need to specify here. Rest is handled by the image. After modifying this `wg0.conf` file, place it in the `etc/wireguard` directory on the VPS instance.
+2. We will paste the private key of the VPS to the configuration below. This file is the file created under the **vps-configs** folder and private key is the only thing we need to specify here. Rest is handled by the image. After modifying this `wg0.conf` file, place it in the `etc/wireguard/` directory on the VPS instance.
 > Note: This requires root access; use `sudo su -` to elevate on the VPS.
 ```ini
 [Interface]
@@ -139,7 +149,9 @@ ping 10.10.10.1
 ```
 
 ### Establishing Firewall Rules
-As part of the image, two scripts are created under the `/usr/local/bin` folder of the node: `node-routing.sh` and `vps-routing.sh`.
+> Before proceeding, you should change the SSH port of the VPS instances so that you have a way of making an SSH connection while Cowrie logs traffic that reaches the default SSH port (Port 22).
+
+As part of the image, two scripts are created under the `/usr/local/bin/` folder of the node: `node-routing.sh` and `vps-routing.sh`.
 
 1. `vps-routing.sh` is created for you to conveniently copy and run on the VPS. This is the script that requires the name of the public-facing interface of the VPS. As mentioned before, this variable is handled as part of the `vars.conf` file that the image script uses, however all VPS instances might not have the same name for their interface. In that case, we can simply declare the variable at the top of `vps-routing.sh` script:
 
@@ -166,7 +178,7 @@ chmod +x vps-routing.sh
 /usr/local/bin/node-routing.sh
 ```
 
-### Monitoring and The Dashboard
+## Monitoring and The Dashboard
 At this point, the honeypot is up and running. You can see for yourself by trying to SSH into the VPS itself. The logs of that will also be visible from the WalT server since our image sends Cowrie logs to WalT's own monitoring system.
 
 To see realtime attacks as they happen from a specific node (delete the `--issuers <NODE_NAME>` part to see the data on every node):
@@ -204,13 +216,6 @@ The dashboard is a Streamlit-based web interface that provides analysis across s
 - **Key Credentials** ranks the most frequently attempted usernames, passwords, and combinations with global search and field-by-field filtering.
 - **Malware & Commands** tracks file transfers grouped by SHA-256 hash, logs every terminal command executed by attackers, and integrates VirusTotal API to search if a malware is a known malware, and if it is, what type of malware it is.
 - **Proxy & Tunneling** logs when attackers attempt to bounce traffic through the honeypot to access external targets.
-- **Catch-All Event Explorer** unpacks raw Cowrie JSON payloads for any event type to be able to go through all types of events logged if wanted. 
-- **Attacker Timeline** reconstructs complete chronological attack sessions by session ID, showing every action an attacker took. All tabs support multi-node filtering via the sidebar, allowing you to compare attack patterns across nodes.
-
-
-
-
-
-
-    
-
+- **Catch-All Event Explorer** unpacks raw Cowrie JSON payloads for any event type for analysis. 
+- **Attacker Timeline** reconstructs complete chronological attack sessions by session ID, showing every action an attacker took. 
+- All tabs support multi-node filtering via the sidebar, allowing you to compare attack patterns across nodes.
