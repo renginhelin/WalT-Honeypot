@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import requests
 
-# Database file path (ensure this path is correct for your environment)
+# Database file path (This path should be updated according to the database file location)
 DB_FILE = "logs\\honeypot.db"
 
 # --- 1. DATABASE QUERY HELPER ---
