@@ -56,8 +56,7 @@ chown -R cowrie:cowrie /persist/downloads /persist/snapshots
 # ---------------------------------------------------------
 
 # Install Cowrie as the cowrie user,
-# configure it to use /persist for downloads and snapshots,
-# set up userdb.txt for custom login credentials.
+# configure it to use /persist for downloads and snapshots.
 echo "Installing Cowrie as the cowrie user..."
 su - cowrie -s /bin/bash <<'EOF'
   set -e
